@@ -1,38 +1,75 @@
-# RAG Evaluation : this evaluate/tests how our RAG are working
---> suppose ask a question to RAG, then how can we determine the answer is correct or not.here we use evaluation to determine the answer is correct or not.
+## WHY CHUNKING MATTERS MORE THAN YOU THINK:
 
-## architecture of RAG
-==> knowledge base --> Embedding --> vectors --> vectorDB --> QUERY --> vectorsDB --> context --> LLM --> Answer
+Every senior RAG engineer will tell you the same thing - you spend more time tuning chunking than any other RAG component. Get chunking right and mediocre retrieval works fine. Get chunking wrong and no amount of advanced retrieval, reranking, or better embeddings will save you. Most tutorials skip this entirely or reduce it to "split every 500 characters" - which is exactly why so many production RAG systems return wrong answers.
+
+## WHAT YOU WILL LEARN IN THIS EPISODE:
+
+Why chunking is the #1 hidden cause of bad RAG systems
+4 chunking strategies compared live on the same document
+Fixed-size splitting - why it's terrible and when it might still work
+Paragraph-based splitting - the intuitive but flawed middle ground
+Recursive character splitting - the workhorse used in 80% of production RAG
+Markdown-aware splitting - the best choice for docs, wikis, and tutorials
+The chunk size + overlap decision framework
+Why you should always think in tokens, not characters
+The chunking strategy decision tree by content type (prose, docs, code, transcripts)
+
+## WHAT WE BUILD IN THIS PART:
+
+Two Python scripts that make chunking trade-offs immediately visible:
+1. Chunking Strategies Comparison - see the same text split 4 different ways, watch code blocks get mangled by naive splitters
+2. Chunk Size Tuning - see how the same text produces wildly different chunks based on size and overlap settings
+
+## INTERVIEW QUESTIONS THIS PART PREPARES YOU FOR:
+
+What chunking strategies are there and when do you use each?
+What is chunk overlap and why does it matter?
+How do you decide chunk size?
+What is parent-child chunking?
+Why does chunking impact retrieval quality?
+Chunk size in tokens or characters?
+
+If you can answer these clearly after this episode, you are ahead of most AI Engineer candidates in the market.
+
+## THE KEY MENTAL MODEL:
+
+Chunking is like cutting a big dosa before serving. Cut too small and it's not filling. Cut too big and it's hard to eat. Cut across the middle and it becomes messy. There is a right way based on what the eater will do with it. Same with LLMs eating chunks - the right chunking strategy depends entirely on your content type and query patterns.
+
+THE PRODUCTION DEFAULT:
+
+For most RAG projects, start with RecursiveCharacterTextSplitter at 500 tokens (approximately 2000 characters) with 50 token overlap. Ship it. Measure with evaluation. Tune from there. Do not over-optimize chunking upfront - real teams iterate based on eval data, they do not guess the perfect number.
 
 
-==> reason behind RAG failure:
+# Overview
 
-1. wrong knowledge base
-2. issue in vector's simlarity -> result in wrong context.
-3. issue with LLM to read and understand.
+## chunking: chunking is a menthod of spliting kowledge into chunk, like DSA problem which algorithm will used when, chunking is used according to required problem.
+
+==> suppose we have 6 line of knowledgebase, we usually conver each line as a chunk/vector but real documents are not like that(million line of document cannot converted as vector line by line). if we have to create rag of book (1000 pages), then it is very obious to create array/chunks according to our need. not line by line
+
+## stratigies  for chunking
+1. Fixed size chunking : if we have to create a rag of a book (100 pages), then we will create every 50 word as chunks.
+--> problem: very strict type of chunking.
+Example: suppose any line is of 60 words, but we have applied fixed sized chunking of 50 then it will cut the sentence which result in lost of meaning of sentence. and when we applied chunk size of 500 , it will contain too many concept in it.
+
+2. Separator / paragraph based chunking : we will create each paragraph as new chunk.
+--> in a book if one paragraph contains 20 lines and other contain 2000 line , there will be problem occur to understand the meaning for RAG. (too small/too big)
+
+3. Recursive chunking : in this chunk also paragraph is used as separator but we will use different separator for further chunking process (like endline, full stop, comma, colon etc)
+Example: firstly we will take a paragraph and check is this too big if yes then find next separator like endline, repeat this process util find best chunk according.
 
 
-## Evaluation process:
-1. create a golden dataset for evaluation (similar to testcases in leetcode) {conatains question , ground truth }-> based on knowledgebase
+NOTE : Overlap in recursive
 
-2. layer by layer checking: (query -> qdrant{top3 vectors})
-=> According to question, correct context is comming or not.
-   1. check precision/accuracy : suppose we aske a question to RAG, it extract context (top3 vectors line) from qdrant(vectordb) but there is only 2 lines relevant to question --> its precision will be 2/3*100 = 66%
-   2. check recall : suppose from above 2 relevant line , only one is retrived --> its recall is 1/2*100 = 50%
+Example: shubham came from college and went to market.
+chunk1: shubham came from college and
+chunk2: college and went to market
+chunk3: went to market
+ 
+=> if recursive break some meaning, overlap solve that.
 
-NOTE: if precision and recall both are high then, there is problem with LLM
+4. semantic : Break chunk on the basis of meaning.
+Example: text-> we launch a new iphone 18 today, it has 200 mp camera. Apple's revenue went up by 18%.
+chunk1: we launch a new iphone 18 today, it has 200 mp camera.
+chunk2: Apple's revenue went up by 18%.
 
-3. Issue with LLM:
-	1. faithfulness: suppose there is context containing , 12 days of paid leave but LLM answers 10 days of leave, here its shows LLM is hallucinating (not faithfull )
-
-	2. correctness: suppose there is 10 days of paid leave in company but the context contain 10 days of paid leave and LLM also answer 10 days of leave ( here llm is faithfull)
-
-	3. relevency: suppose there is context (promotion will be in november) , but LLM answers definition of promotions.
-
-	  
-
-NOTE 1 : there is high chance of LLM to be incorrect and faithfull at the same time OR correct and unfaithfull at the same time ( it means its hallucinating)
-
-NOTE 2 : if we getting low precision , reduce the value of k in topk vector line OR set a threshold (similar, score > 0.5) |  if we are getting low recall , increase the value of topk or increase the threshold value(similar, score >0.9)
-
-NOTE 3 : if answer is not faithfull , have focus on system prompts (donot hallucinate) | if answer is incorrect , the have to focus on context/knowledge (check precision or recall) | if answer is not relevence , correct system prompt ( answer to the point)
+NOTE: we will decide which chunking stratiegies is best for our RAG.
