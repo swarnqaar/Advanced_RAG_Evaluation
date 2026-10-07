@@ -7,7 +7,10 @@ authors = [
     { name = "Shubham Kumar", email = "shubamkumar3039@gmail.com" }
 ]
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "langchain-text-splitters>=1.1.3",
+    "recursivecharactertextsplitter>=0.1.0",
+]
 
 [project.scripts]
 part1 = "part1:main"
