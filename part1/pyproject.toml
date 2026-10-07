@@ -7,7 +7,12 @@ authors = [
     { name = "Shubham Kumar", email = "shubamkumar3039@gmail.com" }
 ]
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "groq>=1.7.0",
+    "python-dotenv>=1.2.4",
+    "qdrant-client>=1.19.1",
+    "sentence-transformers>=6.1.0",
+]
 
 [project.scripts]
 part1 = "part1:main"
