@@ -7,7 +7,12 @@ authors = [
     { name = "Shubham Kumar", email = "shubamkumar3039@gmail.com" }
 ]
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "grok>=6.2",
+    "groq>=1.7.0",
+    "python-dotenv>=1.2.4",
+    "tavily>=1.1.0",
+]
 
 [project.scripts]
 part3 = "part3:main"
